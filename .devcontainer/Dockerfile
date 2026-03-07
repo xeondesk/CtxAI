@@ -1,20 +1,4 @@
-# Base image with Python 3.12 slim
-FROM mcr.microsoft.com/devcontainers/python:3.12-bullseye
+FROM mcr.microsoft.com/devcontainers/python:3.12-bookworm
 
-# Clean apt cache and reduce layers
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        git curl wget build-essential && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Optional: remove unwanted preinstalled Python packages to save space
-RUN pip freeze | xargs pip uninstall -y || true
-
-# Install PyTorch without cache
-RUN pip install --no-cache-dir torch==2.2.0
-
-# Create workspace directory
-WORKDIR /workspace
-
-# Set default shell
-SHELL ["/bin/bash", "-c"]
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+     && apt-get -y install libgmp-dev libmpfr-dev libmpc-dev
