@@ -10,6 +10,9 @@ RUN apt-get update && \
 # Optional: remove unwanted preinstalled Python packages to save space
 RUN pip freeze | xargs pip uninstall -y || true
 
+# Install PyTorch without cache
+RUN pip install --no-cache-dir torch==2.2.0
+
 # Create workspace directory
 WORKDIR /workspace
 
