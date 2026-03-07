@@ -1,5 +1,4 @@
 #!/bin/bash
-# Ensure script exits on error
 set -e
 
 echo "=== Cleaning Python caches and pip cache ==="
@@ -12,4 +11,5 @@ if [ -f /workspaces/requirements.txt ]; then
     pip install --no-cache-dir -r /workspaces/requirements.txt
 fi
 
-echo "=== Environment ready ==="
+# Verify PyTorch installation
+python -c "import torch; print('PyTorch version:', torch.__version__)"
