@@ -75,7 +75,7 @@ def get_version():
 
 
 def is_official_agent_zero_repo() -> bool:
-    """Return True when origin points to agent0ai/agent-zero."""
+    """Return True when origin points to  ctxos/ctxai."""
     try:
         repo = Repo(files.get_base_dir())
         if not repo.remotes:
@@ -87,7 +87,7 @@ def is_official_agent_zero_repo() -> bool:
             remote_url = remote_url[:-4]
 
         allowed_repos = [
-            "agent0ai/agent-zero",
+            " ctxos/ctxai",
             "frdel/agent-zero",
         ]
         return any(

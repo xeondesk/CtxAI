@@ -298,7 +298,7 @@ One skill = one expertise area. If your skill is getting too long, split it:
 
 1. **Fork the Repository:**
    ```bash
-   git clone https://github.com/agent0ai/agent-zero.git
+   git clone https://github.com/ ctxos/ctxai.git
    cd agent-zero
    ```
 

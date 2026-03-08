@@ -19,7 +19,7 @@
 
 Or see DeepWiki generated documentation:
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/agent0ai/agent-zero)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ ctxos/ctxai)
 
 </div>
 
@@ -60,8 +60,8 @@ A detailed setup guide for Windows, macOS, and Linux with a video can be found i
 ```bash
 # Pull and run with Docker
 
-docker pull agent0ai/agent-zero
-docker run -p 50001:80 agent0ai/agent-zero
+docker pull ctxos/ctxai
+docker run -p 50001:80  ctxos/ctxai
 
 # Visit http://localhost:50001 to start
 ```
@@ -389,4 +389,4 @@ Default models set to gpt-4.1
 
 - [Join our Discord](https://discord.gg/B8KZKNsPpj) for live discussions or [visit our Skool Community](https://www.skool.com/agent-zero).
 - [Follow our YouTube channel](https://www.youtube.com/@AgentZeroFW) for hands-on explanations and tutorials
-- [Report Issues](https://github.com/agent0ai/agent-zero/issues) for bug fixes and features
+- [Report Issues](https://github.com/ ctxos/ctxai/issues) for bug fixes and features
