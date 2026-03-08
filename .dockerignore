@@ -1,65 +1,50 @@
-# --- Git ---
-.git
-.gitignore
-.gitattributes
-.github
+###############################################################################
+# Project‑specific exclusions / re‑includes
+###############################################################################
 
-# --- Environments ---
-.venv
-venv
-env
-.python-version
-.uv
+# Obsolete
+memory/**
+instruments/**
+knowledge/custom/**
 
-# --- IDEs ---
-.vscode
-.idea
-.cursor
-.windsurf
-.gemini
-.agent
-.claude
+# Logs, tmp, usr
+logs/*
+tmp/*
+usr/*
 
-# --- Python ---
-**/__pycache__
-**/*.py[cod]
-**/*.pyo
-**/*.pyd
-.pytest_cache
-.coverage
-htmlcov
 
-# --- OS ---
+# Keep .gitkeep markers anywhere
+!**/.gitkeep
+
+
+###############################################################################
+# Environment / tooling
+###############################################################################
+.conda/
+.cursor/
+.venv/
+.git/
+
+
+###############################################################################
+# Tests (root‑level only)
+###############################################################################
+/*.test.py
+
+
+###############################################################################
+# ─── LAST SECTION: universal junk / caches (MUST BE LAST) ───
+#   Put these at the *bottom* so they override any ! re‑includes above
+###############################################################################
+# OS / editor junk
 **/.DS_Store
 **/Thumbs.db
 
-# --- Runtime Data (Don't bake local data into images) ---
-data/
-logs/
-tmp/
-usr/
-agent_history.gif
+# Python caches / compiled artefacts
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+**/*.pyd
 
-# --- CtxAI Specific ---
-memory/
-instruments/
-knowledge/custom/
-
-# --- Documentation ---
-docs/
-README.md
-LICENSE
-AGENTS.md
-
-# --- Secrets ---
+# Environment files anywhere
 *.env
-**/*.key
-**/*.pem
-**/secrets.json
-**/secrets.yaml
-**/secrets.txt
-
-# --- Build Artifacts ---
-dist/
-build/
-*.egg-info/

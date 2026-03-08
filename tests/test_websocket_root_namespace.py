@@ -1,13 +1,9 @@
 import asyncio
 import contextlib
 import socket
-from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, AsyncIterator
 
 import pytest
-from socketio.asgi import ASGIApp
-from socketio.async_client import AsyncClient
-from socketio.async_server import AsyncServer
 
 
 @contextlib.asynccontextmanager
@@ -53,10 +49,11 @@ async def test_root_namespace_request_style_calls_resolve_with_no_handlers() -> 
     """
 
     from flask import Flask
+    import socketio
 
-    from cli.ui import configure_websocket_namespaces
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import WebSocketManager
+    from run_ui import configure_websocket_namespaces
 
     app = Flask("test_ws_root_namespace")
     app.secret_key = "test-secret"
@@ -82,7 +79,7 @@ async def test_root_namespace_request_style_calls_resolve_with_no_handlers() -> 
 
     HelloHandler._reset_instance_for_testing()
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
     lock = __import__("threading").RLock()
     manager = WebSocketManager(sio, lock)
 
@@ -95,10 +92,10 @@ async def test_root_namespace_request_style_calls_resolve_with_no_handlers() -> 
         },
     )
 
-    asgi_app = ASGIApp(sio)
+    asgi_app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(asgi_app) as base_url:
-        client = AsyncClient()
+        client = socketio.AsyncClient()
         await client.connect(
             base_url,
             namespaces=["/"],
@@ -110,9 +107,7 @@ async def test_root_namespace_request_style_calls_resolve_with_no_handlers() -> 
             assert res_unknown["results"][0]["ok"] is False
             assert res_unknown["results"][0]["error"]["code"] == "NO_HANDLERS"
 
-            res_known_elsewhere = await client.call(
-                "hello_request", {"name": "x"}, namespace="/", timeout=2
-            )
+            res_known_elsewhere = await client.call("hello_request", {"name": "x"}, namespace="/", timeout=2)
             assert res_known_elsewhere["results"][0]["ok"] is False
             assert res_known_elsewhere["results"][0]["error"]["code"] == "NO_HANDLERS"
             assert calls == []
@@ -127,10 +122,11 @@ async def test_root_namespace_fire_and_forget_does_not_invoke_application_handle
     """
 
     from flask import Flask
+    import socketio
 
-    from cli.ui import configure_websocket_namespaces
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import WebSocketManager
+    from run_ui import configure_websocket_namespaces
 
     app = Flask("test_ws_root_fire_and_forget")
     app.secret_key = "test-secret"
@@ -156,7 +152,7 @@ async def test_root_namespace_fire_and_forget_does_not_invoke_application_handle
 
     SideEffectHandler._reset_instance_for_testing()
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
     lock = __import__("threading").RLock()
     manager = WebSocketManager(sio, lock)
 
@@ -169,10 +165,10 @@ async def test_root_namespace_fire_and_forget_does_not_invoke_application_handle
         },
     )
 
-    asgi_app = ASGIApp(sio)
+    asgi_app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(asgi_app) as base_url:
-        client = AsyncClient()
+        client = socketio.AsyncClient()
         await client.connect(
             base_url,
             namespaces=["/"],

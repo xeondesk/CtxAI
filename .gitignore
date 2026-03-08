@@ -1,86 +1,42 @@
-# --- Python ---
-__pycache__/
+# Ignore common unwanted files globally
+**/.DS_Store
+**/.env
+**/__pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+**/.conda/
 
-# --- Environments ---
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.python-version
-
-# --- uv ---
-.uv/
-
-# --- IDEs ---
-.vscode/
-.idea/
-*.swp
-*.swo
+#Ignore IDE files
 .cursor/
 .windsurf/
 
-# --- OS ---
-.DS_Store
-Thumbs.db
+# ignore test files in root dir
+/*.test.py
 
-# --- Runtime Data ---
-data/
-!data/
-data/*
-!data/**/.gitkeep
-logs/
-tmp/
-usr/
+# Ignore all contents of the virtual environment directory
+.venv/
 
-# --- CtxAI Specific ---
-agent_history.gif
-.agent/
-.claude/
-.gemini/
-
-# --- Legacy (Keep to ensure no accidental commits) ---
+# obsolete folders
 /memory/
 /knowledge/custom/
 /instruments/
 
-# --- Tests ---
-/*.test.py
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
-.hypothesis/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.env
-.venv/
-dist/
-build/
-*.egg-info/
+# Handle logs directory
+logs/**
+!logs/**/
+
+# Handle tmp and usr directory
+tmp/**
+!tmp/**/
+usr/**
+!usr/**/
+
+# Handle knowledge directory
+
+# Global rule to include .gitkeep files anywhere
+!**/.gitkeep
+
+# for browser-use
+agent_history.gif
+
+.agent/**
+.claude/**

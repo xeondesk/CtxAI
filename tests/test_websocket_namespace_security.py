@@ -3,14 +3,10 @@ import contextlib
 import socket
 import sys
 import threading
-from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncIterator
 
 import pytest
-from socketio.asgi import ASGIApp
-from socketio.async_client import AsyncClient
-from socketio.async_server import AsyncServer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -62,13 +58,13 @@ def _make_session_cookie(app: Any, data: dict[str, Any]) -> str:
 
 @pytest.mark.asyncio
 async def test_connect_security_is_computed_per_namespace_and_enforced(monkeypatch) -> None:
-    import socketio
     from flask import Flask
+    import socketio
 
-    from cli.ui import configure_websocket_namespaces
-    from ctxai.core.runtime import runtime
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import WebSocketManager
+    from helpers import runtime
+    from run_ui import configure_websocket_namespaces
 
     class OpenHandler(WebSocketHandler):
         @classmethod
@@ -83,9 +79,7 @@ async def test_connect_security_is_computed_per_namespace_and_enforced(monkeypat
         def get_event_types(cls) -> list[str]:
             return ["open_ping"]
 
-        async def process_event(
-            self, event_type: str, data: dict[str, Any], sid: str
-        ) -> dict[str, Any]:
+        async def process_event(self, event_type: str, data: dict[str, Any], sid: str) -> dict[str, Any]:
             return {"ok": True}
 
     class SecureHandler(WebSocketHandler):
@@ -93,20 +87,18 @@ async def test_connect_security_is_computed_per_namespace_and_enforced(monkeypat
         def get_event_types(cls) -> list[str]:
             return ["secure_ping"]
 
-        async def process_event(
-            self, event_type: str, data: dict[str, Any], sid: str
-        ) -> dict[str, Any]:
+        async def process_event(self, event_type: str, data: dict[str, Any], sid: str) -> dict[str, Any]:
             return {"ok": True}
 
     OpenHandler._reset_instance_for_testing()
     SecureHandler._reset_instance_for_testing()
 
-    monkeypatch.setattr("ctxai.utils.login.get_credentials_hash", lambda: "hash")
+    monkeypatch.setattr("helpers.login.get_credentials_hash", lambda: "hash")
 
     webapp = Flask("test_websocket_namespace_security")
     webapp.secret_key = "test-secret"
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
     lock = threading.RLock()
     manager = WebSocketManager(sio, lock)
     handlers_by_namespace = {
@@ -121,11 +113,11 @@ async def test_connect_security_is_computed_per_namespace_and_enforced(monkeypat
         handlers_by_namespace=handlers_by_namespace,
     )
 
-    asgi_app = ASGIApp(sio)
+    asgi_app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(asgi_app) as base_url:
         # Open namespace should not require auth/csrf (but Origin validation is always enforced).
-        open_client = AsyncClient()
+        open_client = socketio.AsyncClient()
         await open_client.connect(
             base_url,
             namespaces=["/open"],
@@ -136,9 +128,7 @@ async def test_connect_security_is_computed_per_namespace_and_enforced(monkeypat
             res = await open_client.call("open_ping", {}, namespace="/open", timeout=2)
             assert isinstance(res, dict)
             assert res.get("results")
-            res_unhandled = await open_client.call(
-                "unhandled_event", {"x": 1}, namespace="/open", timeout=2
-            )
+            res_unhandled = await open_client.call("unhandled_event", {"x": 1}, namespace="/open", timeout=2)
             assert res_unhandled["results"]
             assert res_unhandled["results"][0]["ok"] is False
             assert res_unhandled["results"][0]["error"]["code"] == "NO_HANDLERS"
@@ -146,7 +136,7 @@ async def test_connect_security_is_computed_per_namespace_and_enforced(monkeypat
             await open_client.disconnect()
 
         # Secure namespace rejects without valid session+csrf when credentials are configured.
-        secure_client = AsyncClient()
+        secure_client = socketio.AsyncClient()
         with pytest.raises(socketio.exceptions.ConnectionError):
             await secure_client.connect(
                 base_url,
@@ -170,7 +160,7 @@ async def test_connect_security_is_computed_per_namespace_and_enforced(monkeypat
         csrf_cookie_name = f"csrf_token_{runtime.get_runtime_id()}"
         cookie_header = f"{session_cookie_name}={session_cookie}; {csrf_cookie_name}={csrf_token}"
 
-        secure_client_ok = AsyncClient()
+        secure_client_ok = socketio.AsyncClient()
         await secure_client_ok.connect(
             base_url,
             namespaces=["/secure"],
@@ -188,12 +178,12 @@ async def test_connect_security_is_computed_per_namespace_and_enforced(monkeypat
 
 @pytest.mark.asyncio
 async def test_unknown_namespace_rejected_with_deterministic_connect_error_payload() -> None:
-    import socketio
     from flask import Flask
+    import socketio
 
-    from cli.ui import configure_websocket_namespaces
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import WebSocketManager
+    from run_ui import configure_websocket_namespaces
 
     class OpenHandler(WebSocketHandler):
         @classmethod
@@ -208,9 +198,7 @@ async def test_unknown_namespace_rejected_with_deterministic_connect_error_paylo
         def get_event_types(cls) -> list[str]:
             return ["open_ping"]
 
-        async def process_event(
-            self, event_type: str, data: dict[str, Any], sid: str
-        ) -> dict[str, Any]:
+        async def process_event(self, event_type: str, data: dict[str, Any], sid: str) -> dict[str, Any]:
             return {"ok": True}
 
     OpenHandler._reset_instance_for_testing()
@@ -218,7 +206,7 @@ async def test_unknown_namespace_rejected_with_deterministic_connect_error_paylo
     webapp = Flask("test_unknown_namespace_rejection")
     webapp.secret_key = "test-secret"
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
     lock = threading.RLock()
     manager = WebSocketManager(sio, lock)
 
@@ -229,10 +217,10 @@ async def test_unknown_namespace_rejected_with_deterministic_connect_error_paylo
         handlers_by_namespace={"/open": [OpenHandler.get_instance(sio, lock)]},
     )
 
-    asgi_app = ASGIApp(sio)
+    asgi_app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(asgi_app) as base_url:
-        client = AsyncClient()
+        client = socketio.AsyncClient()
         connect_error_fut: asyncio.Future[Any] = asyncio.get_running_loop().create_future()
 
         async def _on_connect_error(data: Any) -> None:
@@ -257,32 +245,30 @@ async def test_unknown_namespace_rejected_with_deterministic_connect_error_paylo
 
 @pytest.mark.asyncio
 async def test_secure_namespace_rejects_missing_auth_even_with_valid_csrf(monkeypatch) -> None:
-    import socketio
     from flask import Flask
+    import socketio
 
-    from cli.ui import configure_websocket_namespaces
-    from ctxai.core.runtime import runtime
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import WebSocketManager
+    from helpers import runtime
+    from run_ui import configure_websocket_namespaces
 
     class SecureHandler(WebSocketHandler):
         @classmethod
         def get_event_types(cls) -> list[str]:
             return ["secure_ping"]
 
-        async def process_event(
-            self, event_type: str, data: dict[str, Any], sid: str
-        ) -> dict[str, Any]:
+        async def process_event(self, event_type: str, data: dict[str, Any], sid: str) -> dict[str, Any]:
             return {"ok": True}
 
     SecureHandler._reset_instance_for_testing()
 
-    monkeypatch.setattr("ctxai.utils.login.get_credentials_hash", lambda: "hash")
+    monkeypatch.setattr("helpers.login.get_credentials_hash", lambda: "hash")
 
     webapp = Flask("test_ws_secure_missing_auth")
     webapp.secret_key = "test-secret"
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
     lock = threading.RLock()
     manager = WebSocketManager(sio, lock)
     handlers_by_namespace = {
@@ -296,7 +282,7 @@ async def test_secure_namespace_rejects_missing_auth_even_with_valid_csrf(monkey
         handlers_by_namespace=handlers_by_namespace,
     )
 
-    asgi_app = ASGIApp(sio)
+    asgi_app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(asgi_app) as base_url:
         csrf_token = "csrf-auth-missing"
@@ -311,7 +297,7 @@ async def test_secure_namespace_rejects_missing_auth_even_with_valid_csrf(monkey
         csrf_cookie_name = f"csrf_token_{runtime.get_runtime_id()}"
         cookie_header = f"{session_cookie_name}={session_cookie}; {csrf_cookie_name}={csrf_token}"
 
-        client = AsyncClient()
+        client = socketio.AsyncClient()
         with pytest.raises(socketio.exceptions.ConnectionError):
             await client.connect(
                 base_url,
@@ -325,32 +311,30 @@ async def test_secure_namespace_rejects_missing_auth_even_with_valid_csrf(monkey
 
 @pytest.mark.asyncio
 async def test_secure_namespace_rejects_invalid_csrf_cookie(monkeypatch) -> None:
-    import socketio
     from flask import Flask
+    import socketio
 
-    from cli.ui import configure_websocket_namespaces
-    from ctxai.core.runtime import runtime
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import WebSocketManager
+    from helpers import runtime
+    from run_ui import configure_websocket_namespaces
 
     class SecureHandler(WebSocketHandler):
         @classmethod
         def get_event_types(cls) -> list[str]:
             return ["secure_ping"]
 
-        async def process_event(
-            self, event_type: str, data: dict[str, Any], sid: str
-        ) -> dict[str, Any]:
+        async def process_event(self, event_type: str, data: dict[str, Any], sid: str) -> dict[str, Any]:
             return {"ok": True}
 
     SecureHandler._reset_instance_for_testing()
 
-    monkeypatch.setattr("ctxai.utils.login.get_credentials_hash", lambda: "hash")
+    monkeypatch.setattr("helpers.login.get_credentials_hash", lambda: "hash")
 
     webapp = Flask("test_ws_secure_invalid_csrf")
     webapp.secret_key = "test-secret"
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
     lock = threading.RLock()
     manager = WebSocketManager(sio, lock)
     handlers_by_namespace = {
@@ -364,7 +348,7 @@ async def test_secure_namespace_rejects_invalid_csrf_cookie(monkeypatch) -> None
         handlers_by_namespace=handlers_by_namespace,
     )
 
-    asgi_app = ASGIApp(sio)
+    asgi_app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(asgi_app) as base_url:
         csrf_token = "csrf-good"
@@ -380,7 +364,7 @@ async def test_secure_namespace_rejects_invalid_csrf_cookie(monkeypatch) -> None
         csrf_cookie_name = f"csrf_token_{runtime.get_runtime_id()}"
         cookie_header = f"{session_cookie_name}={session_cookie}; {csrf_cookie_name}=csrf-bad"
 
-        client = AsyncClient()
+        client = socketio.AsyncClient()
         with pytest.raises(socketio.exceptions.ConnectionError):
             await client.connect(
                 base_url,
@@ -394,13 +378,13 @@ async def test_secure_namespace_rejects_invalid_csrf_cookie(monkeypatch) -> None
 
 @pytest.mark.asyncio
 async def test_csrf_required_without_auth_is_enforced(monkeypatch) -> None:
-    import socketio
     from flask import Flask
+    import socketio
 
-    from cli.ui import configure_websocket_namespaces
-    from ctxai.core.runtime import runtime
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import WebSocketManager
+    from helpers import runtime
+    from run_ui import configure_websocket_namespaces
 
     class CsrfOnlyHandler(WebSocketHandler):
         @classmethod
@@ -415,19 +399,17 @@ async def test_csrf_required_without_auth_is_enforced(monkeypatch) -> None:
         def get_event_types(cls) -> list[str]:
             return ["csrf_only_ping"]
 
-        async def process_event(
-            self, event_type: str, data: dict[str, Any], sid: str
-        ) -> dict[str, Any]:
+        async def process_event(self, event_type: str, data: dict[str, Any], sid: str) -> dict[str, Any]:
             return {"ok": True}
 
     CsrfOnlyHandler._reset_instance_for_testing()
 
-    monkeypatch.setattr("ctxai.utils.login.get_credentials_hash", lambda: None)
+    monkeypatch.setattr("helpers.login.get_credentials_hash", lambda: None)
 
     webapp = Flask("test_ws_csrf_only")
     webapp.secret_key = "test-secret"
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
     lock = threading.RLock()
     manager = WebSocketManager(sio, lock)
     handlers_by_namespace = {
@@ -441,10 +423,10 @@ async def test_csrf_required_without_auth_is_enforced(monkeypatch) -> None:
         handlers_by_namespace=handlers_by_namespace,
     )
 
-    asgi_app = ASGIApp(sio)
+    asgi_app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(asgi_app) as base_url:
-        client = AsyncClient()
+        client = socketio.AsyncClient()
         with pytest.raises(socketio.exceptions.ConnectionError):
             await client.connect(
                 base_url,
@@ -466,7 +448,7 @@ async def test_csrf_required_without_auth_is_enforced(monkeypatch) -> None:
         csrf_cookie_name = f"csrf_token_{runtime.get_runtime_id()}"
         cookie_header = f"{session_cookie_name}={session_cookie}; {csrf_cookie_name}={csrf_token}"
 
-        client_ok = AsyncClient()
+        client_ok = socketio.AsyncClient()
         await client_ok.connect(
             base_url,
             namespaces=["/csrf_only"],

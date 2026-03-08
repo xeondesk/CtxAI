@@ -3,18 +3,19 @@ from __future__ import annotations
 import sys
 import tempfile
 import threading
-from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Iterator
 
 import pytest
 from flask import Flask
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from ctxai.api.routers.system.load_webui_extensions import LoadWebuiExtensions
+from api.load_webui_extensions import LoadWebuiExtensions
+
 
 SURFACE_SCENARIOS: list[tuple[str, str]] = [
     ("sidebar-start", "webui/components/sidebar/left-sidebar.html"),
@@ -23,14 +24,8 @@ SURFACE_SCENARIOS: list[tuple[str, str]] = [
     ("sidebar-top-wrapper-end", "webui/components/sidebar/top-section/sidebar-top.html"),
     ("sidebar-quick-actions-main-start", "webui/components/sidebar/top-section/quick-actions.html"),
     ("sidebar-quick-actions-main-end", "webui/components/sidebar/top-section/quick-actions.html"),
-    (
-        "sidebar-quick-actions-dropdown-start",
-        "webui/components/sidebar/top-section/quick-actions.html",
-    ),
-    (
-        "sidebar-quick-actions-dropdown-end",
-        "webui/components/sidebar/top-section/quick-actions.html",
-    ),
+    ("sidebar-quick-actions-dropdown-start", "webui/components/sidebar/top-section/quick-actions.html"),
+    ("sidebar-quick-actions-dropdown-end", "webui/components/sidebar/top-section/quick-actions.html"),
     ("sidebar-chats-list-start", "webui/components/sidebar/chats/chats-list.html"),
     ("sidebar-chats-list-end", "webui/components/sidebar/chats/chats-list.html"),
     ("sidebar-tasks-list-start", "webui/components/sidebar/tasks/tasks-list.html"),
@@ -72,18 +67,26 @@ def _assert_surface_anchor_in_template(surface: str, template_rel_path: str) -> 
 
 @contextmanager
 def _temporary_probe_plugin(surface: str) -> Iterator[tuple[str, str]]:
-    plugins_root = PROJECT_ROOT / "data" / "usr" / "plugins"
-    plugins_root.mkdir(parents=True, exist_ok=True)
+    plugins_root = PROJECT_ROOT / "plugins"
     with tempfile.TemporaryDirectory(
         prefix="tmp_surface_probe_",
         dir=plugins_root,
     ) as temp_plugin_dir:
         plugin_id = Path(temp_plugin_dir).name
-        probe_file = Path(temp_plugin_dir) / "extensions" / "webui" / surface / "surface-probe.html"
+        probe_file = (
+            Path(temp_plugin_dir)
+            / "extensions"
+            / "webui"
+            / surface
+            / "surface-probe.html"
+        )
         probe_file.parent.mkdir(parents=True, exist_ok=True)
-        (Path(temp_plugin_dir) / "plugin.yaml").write_text("title: Probe", encoding="utf-8")
         probe_file.write_text(
-            (f'<div x-data data-surface-probe="{surface}" data-plugin-id="{plugin_id}"></div>'),
+            (
+                "<div x-data "
+                f'data-surface-probe="{surface}" '
+                f'data-plugin-id="{plugin_id}"></div>'
+            ),
             encoding="utf-8",
         )
         yield plugin_id, probe_file.name
@@ -108,7 +111,9 @@ async def test_webui_surface_extension_point_end_to_end(
         )
         assert isinstance(payload, dict)
         extensions = payload.get("extensions", [])
-        expected_suffix = f"{plugin_id}/extensions/webui/{surface}/{probe_file_name}"
+        expected_suffix = (
+            f"{plugin_id}/extensions/webui/{surface}/{probe_file_name}"
+        )
 
         assert any(
             extension.get("plugin_id") == plugin_id

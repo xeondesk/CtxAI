@@ -1,10 +1,10 @@
 # Plugins
 
-This page documents the current Ctx AI plugin system, including manifest format, discovery rules, scoped configuration, activation behavior, and how to share a plugin with the community.
+This page documents the current Agent Zero plugin system, including manifest format, discovery rules, scoped configuration, activation behavior, and how to share a plugin with the community.
 
 ## Overview
 
-Plugins extend Ctx AI through convention-based folders. A plugin can provide:
+Plugins extend Agent Zero through convention-based folders. A plugin can provide:
 
 - Backend: API handlers, tools, helpers, Python lifecycle extensions
 - Frontend: WebUI components and extension-point injections
@@ -21,7 +21,7 @@ On name collisions, user plugins take precedence.
 
 ## Manifest (`plugin.yaml`)
 
-Every plugin must contain `plugin.yaml`. This is the **runtime manifest** — it drives Ctx AI behavior. It is distinct from the index manifest used when publishing to the Plugin Index (see [Publishing to the Plugin Index](#publishing-to-the-plugin-index) below).
+Every plugin must contain `plugin.yaml`. This is the **runtime manifest** — it drives Agent Zero behavior. It is distinct from the index manifest used when publishing to the Plugin Index (see [Publishing to the Plugin Index](#publishing-to-the-plugin-index) below).
 
 ```yaml
 title: My Plugin
@@ -101,8 +101,8 @@ Return `0` on success, non-zero on failure. Print progress for user feedback. Us
 
 Plugin settings are resolved by scope. Higher priority overrides lower priority:
 
-1. `project/.ctxproj/agents/<profile>/plugins/<name>/config.json`
-2. `project/.ctxproj/plugins/<name>/config.json`
+1. `project/.a0proj/agents/<profile>/plugins/<name>/config.json`
+2. `project/.a0proj/plugins/<name>/config.json`
 3. `usr/agents/<profile>/plugins/<name>/config.json`
 4. `usr/plugins/<name>/config.json`
 5. `plugins/<name>/default_config.yaml` (fallback defaults)
@@ -155,13 +155,13 @@ Supported actions:
 
 ## Publishing to the Plugin Index
 
-The **Plugin Index** is a community-maintained repository at https://github.com/ctxos/ctx-plugins. Plugins listed there are discoverable by all Ctx AI users.
+The **Plugin Index** is a community-maintained repository at https://github.com/agent0ai/a0-plugins. Plugins listed there are discoverable by all Agent Zero users.
 
 ### Two Distinct plugin.yaml Files
 
 There are two completely different `plugin.yaml` schemas — they must not be confused:
 
-**Runtime manifest** (inside your plugin's own repo, drives Ctx AI behavior):
+**Runtime manifest** (inside your plugin's own repo, drives Agent Zero behavior):
 ```yaml
 title: My Plugin
 description: What this plugin does.
@@ -173,7 +173,7 @@ per_agent_config: false
 always_enabled: false
 ```
 
-**Index manifest** (submitted to `ctx-plugins` under `plugins/<your-plugin-name>/`, drives discoverability only):
+**Index manifest** (submitted to `a0-plugins` under `plugins/<your-plugin-name>/`, drives discoverability only):
 ```yaml
 title: My Plugin
 description: What this plugin does.
@@ -204,7 +204,7 @@ your-plugin-repo/          ← GitHub repository root
 ### Submission Process
 
 1. Create a GitHub repository with the runtime `plugin.yaml` at the repo root.
-2. Fork `https://github.com/ctxos/ctx-plugins`.
+2. Fork `https://github.com/agent0ai/a0-plugins`.
 3. Add `plugins/<your-plugin-name>/plugin.yaml` (index manifest) to your fork, and optionally a square thumbnail image (≤ 20 KB, named `thumbnail.png|jpg|webp`).
 4. Open a Pull Request. One PR must add exactly one new plugin folder.
 5. CI validates automatically. A maintainer reviews and merges.
@@ -214,14 +214,14 @@ Submission rules:
 - Folders starting with `_` are reserved for internal use
 - `title`: max 50 characters
 - `description`: max 500 characters
-- `tags`: optional, up to 5, see https://github.com/ctxos/ctx-plugins/blob/main/TAGS.md
+- `tags`: optional, up to 5, see https://github.com/agent0ai/a0-plugins/blob/main/TAGS.md
 
 ### Plugin Marketplace (Coming Soon)
 
-A built-in **Plugin Marketplace** (always-active plugin) will allow users to browse the Plugin Index and install or update community plugins directly from the Ctx AI UI without leaving the application. This section will be updated once the marketplace plugin is released.
+A built-in **Plugin Marketplace** (always-active plugin) will allow users to browse the Plugin Index and install or update community plugins directly from the Agent Zero UI without leaving the application. This section will be updated once the marketplace plugin is released.
 
 ## See Also
 
 - `docs/agents/AGENTS.plugins.md` for full architecture details
-- `skills/ctx-create-plugin/SKILL.md` for plugin authoring workflow (agent-facing)
+- `skills/a0-create-plugin/SKILL.md` for plugin authoring workflow (agent-facing)
 - `plugins/README.md` for core plugin directory overview

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
-import time
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+import sys
+import time
+from typing import Any, Callable, Dict, List, Optional
 
 try:
     import pytest  # type: ignore
@@ -16,16 +16,14 @@ except ImportError:  # pragma: no cover
     pytest = None
 
 if pytest is not None:
-    pytestmark = pytest.mark.skip(
-        reason="Visualization utility; excluded from automated test runs."
-    )
+    pytestmark = pytest.mark.skip(reason="Visualization utility; excluded from automated test runs.")
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from ctxai.utils.file_tree import (
+from helpers.file_tree import (
     OUTPUT_MODE_FLAT,
     OUTPUT_MODE_NESTED,
     OUTPUT_MODE_STRING,
@@ -36,7 +34,8 @@ from ctxai.utils.file_tree import (
     SORT_DESC,
     file_tree,
 )
-from ctxai.utils.files import create_dir, delete_dir, get_abs_path, write_file
+from helpers.files import create_dir, delete_dir, get_abs_path, write_file
+
 
 BASE_TEMP_ROOT = "tmp/tests/file_tree/visualize"
 
@@ -44,23 +43,23 @@ BASE_TEMP_ROOT = "tmp/tests/file_tree/visualize"
 @dataclass(slots=True)
 class Config:
     label: str
-    params: dict[str, Any]
+    params: Dict[str, Any]
 
 
-SetupHook = Callable[[str], None] | None
+SetupHook = Optional[Callable[[str], None]]
 
 
 @dataclass(slots=True)
 class Scenario:
     name: str
     description: str
-    structure: dict[str, Any]
-    configs: list[Config] = field(default_factory=list)
-    ignore_content: str | None = None
+    structure: Dict[str, Any]
+    configs: List[Config] = field(default_factory=list)
+    ignore_content: Optional[str] = None
     setup: SetupHook = None
 
 
-def materialize_structure(base_rel: str, structure: dict[str, Any]) -> None:
+def materialize_structure(base_rel: str, structure: Dict[str, Any]) -> None:
     for entry, value in structure.items():
         rel = os.path.join(base_rel, entry)
         if isinstance(value, dict):
@@ -80,7 +79,7 @@ def print_header(title: str, char: str = "=") -> None:
     print(char * 80)
 
 
-def print_flat(items: list[dict[str, Any]]) -> None:
+def print_flat(items: List[Dict[str, Any]]) -> None:
     print("level  type     name                   text")
     print("-" * 80)
     for item in items:
@@ -91,10 +90,10 @@ def print_flat(items: list[dict[str, Any]]) -> None:
         print(f"{level:<5}  {item_type:<7}  {name:<20}  {text}")
 
 
-def print_nested(items: list[dict[str, Any]], root_label: str) -> None:
+def print_nested(items: List[Dict[str, Any]], root_label: str) -> None:
     print(root_label)
 
-    def recurse(nodes: list[dict[str, Any]], prefix: str) -> None:
+    def recurse(nodes: List[Dict[str, Any]], prefix: str) -> None:
         total = len(nodes)
         for index, node in enumerate(nodes):
             is_last = index == total - 1
@@ -126,20 +125,20 @@ def _set_entry_times(relative_path: str, timestamp: float) -> None:
     time.sleep(0.01)
 
 
-def _apply_timestamps(base_rel: str, paths: list[str], base_ts: float | None = None) -> None:
+def _apply_timestamps(base_rel: str, paths: List[str], base_ts: Optional[float] = None) -> None:
     if base_ts is None:
         base_ts = time.time()
     for offset, rel in enumerate(paths, start=1):
         _set_entry_times(os.path.join(base_rel, rel), base_ts + offset)
 
 
-def list_scenarios(scenarios: list[Scenario]) -> None:
+def list_scenarios(scenarios: List[Scenario]) -> None:
     print("Available scenarios:")
     for scenario in scenarios:
         print(f"  - {scenario.name}: {scenario.description}")
 
 
-def run_scenarios(selected: list[Scenario]) -> None:
+def run_scenarios(selected: List[Scenario]) -> None:
     create_dir(BASE_TEMP_ROOT)
     for scenario in selected:
         print_header(f"Scenario: {scenario.name} — {scenario.description}")
@@ -190,8 +189,8 @@ def run_scenarios(selected: list[Scenario]) -> None:
         print()
 
 
-def build_scenarios() -> list[Scenario]:
-    scenarios: list[Scenario] = []
+def build_scenarios() -> List[Scenario]:
+    scenarios: List[Scenario] = []
 
     scenarios.append(
         Scenario(

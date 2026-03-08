@@ -1,4 +1,4 @@
-# Ctx AI - AGENTS.md
+# Agent Zero - AGENTS.md
 
 [Generated using reconnaissance on 2026-02-22]
 
@@ -27,7 +27,7 @@ Frontend Deep Dives: [Component System](docs/agents/AGENTS.components.md) | [Mod
 
 ## Project Overview
 
-Ctx AI is a dynamic, organic agentic framework designed to grow and learn. It uses the operating system as a tool, featuring a multi-agent cooperation model where every agent can create subordinates to break down tasks.
+Agent Zero is a dynamic, organic agentic framework designed to grow and learn. It uses the operating system as a tool, featuring a multi-agent cooperation model where every agent can create subordinates to break down tasks.
 
 Type: Full-Stack Agentic Framework (Python Backend + Alpine.js Frontend)
 Status: Active Development
@@ -49,11 +49,11 @@ pip install -r requirements2.txt
 
 ## Docker Environment
 
-When running in Docker, Ctx AI uses two distinct Python runtimes to isolate the framework from the code being executed:
+When running in Docker, Agent Zero uses two distinct Python runtimes to isolate the framework from the code being executed:
 
-### 1. Framework Runtime (/opt/venv-ctx)
+### 1. Framework Runtime (/opt/venv-a0)
 - Version: Python 3.12.4
-- Purpose: Runs the Ctx AI backend, API, and core logic.
+- Purpose: Runs the Agent Zero backend, API, and core logic.
 - Packages: Contains all dependencies from requirements.txt.
 
 ### 2. Execution Runtime (/opt/venv)
@@ -214,4 +214,4 @@ pip install -r requirements2.txt
 ---
 
 *Last updated: 2026-02-22*
-*Maintained by: Ctx AI Core Team*
+*Maintained by: Agent Zero Core Team*

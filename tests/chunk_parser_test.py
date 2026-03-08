@@ -1,8 +1,7 @@
-import os
-import sys
+import sys, os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ctxai.core import models
+import models
 
 ex1 = "<think>reasoning goes here</think>response goes here"
 ex2 = "<think>reasoning goes here</thi"

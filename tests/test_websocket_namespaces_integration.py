@@ -1,13 +1,9 @@
 import asyncio
 import contextlib
 import socket
-from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, AsyncIterator
 
 import pytest
-from socketio.asgi import ASGIApp
-from socketio.async_client import AsyncClient
-from socketio.async_server import AsyncServer
 
 
 @contextlib.asynccontextmanager
@@ -46,20 +42,18 @@ async def _run_asgi_app(app: Any) -> AsyncIterator[str]:
 
 
 @pytest.mark.asyncio
-async def test_unregistered_namespace_connection_fails_with_unknown_namespace_connect_error() -> (
-    None
-):
+async def test_unregistered_namespace_connection_fails_with_unknown_namespace_connect_error() -> None:
     """
     US5 integration: unregistered namespace connections fail deterministically with a structured
     connect_error payload (UNKNOWN_NAMESPACE), independent of python-socketio defaults.
     """
 
-    import socketio
     from flask import Flask
+    import socketio
 
-    from cli.ui import configure_websocket_namespaces
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import WebSocketManager
+    from run_ui import configure_websocket_namespaces
 
     class OpenHandler(WebSocketHandler):
         @classmethod
@@ -82,7 +76,7 @@ async def test_unregistered_namespace_connection_fails_with_unknown_namespace_co
     webapp = Flask("test_ws_namespaces_integration")
     webapp.secret_key = "test-secret"
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
     lock = __import__("threading").RLock()
     manager = WebSocketManager(sio, lock)
 
@@ -93,10 +87,10 @@ async def test_unregistered_namespace_connection_fails_with_unknown_namespace_co
         handlers_by_namespace={"/open": [OpenHandler.get_instance(sio, lock)]},
     )
 
-    asgi_app = ASGIApp(sio)
+    asgi_app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(asgi_app) as base_url:
-        client = AsyncClient()
+        client = socketio.AsyncClient()
         connect_error_fut: asyncio.Future[Any] = asyncio.get_running_loop().create_future()
 
         async def _on_connect_error(data: Any) -> None:

@@ -1,13 +1,9 @@
 import asyncio
 import contextlib
 import socket
-from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, AsyncIterator
 
 import pytest
-from socketio.asgi import ASGIApp
-from socketio.async_client import AsyncClient
-from socketio.async_server import AsyncServer
 
 
 @contextlib.asynccontextmanager
@@ -47,11 +43,12 @@ async def _run_asgi_app(app: Any) -> AsyncIterator[str]:
 
 @pytest.mark.asyncio
 async def test_socketio_wildcard_handler_only_runs_for_unhandled_events() -> None:
+    import socketio
 
     handled_calls: list[tuple[str, Any]] = []
     wildcard_calls: list[str] = []
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 
     @sio.on("handled", namespace="/ns")
     async def _handled(sid: str, data: Any) -> dict[str, Any]:
@@ -63,10 +60,10 @@ async def test_socketio_wildcard_handler_only_runs_for_unhandled_events() -> Non
         wildcard_calls.append(event)
         return {"path": "wildcard", "event": event}
 
-    app = ASGIApp(sio)
+    app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(app) as base_url:
-        client = AsyncClient()
+        client = socketio.AsyncClient()
         await client.connect(base_url, namespaces=["/ns"])
         try:
             res = await client.call("handled", {"x": 1}, namespace="/ns", timeout=2)
@@ -82,8 +79,9 @@ async def test_socketio_wildcard_handler_only_runs_for_unhandled_events() -> Non
 
 @pytest.mark.asyncio
 async def test_socketio_handler_return_values_ack_only_when_client_requests_ack() -> None:
+    import socketio
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
     sent_packets: list[Any] = []
 
     original_send_packet = sio._send_packet
@@ -98,10 +96,10 @@ async def test_socketio_handler_return_values_ack_only_when_client_requests_ack(
     async def _returns_value(_sid: str, _data: Any) -> dict[str, Any]:
         return {"ok": True}
 
-    app = ASGIApp(sio)
+    app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(app) as base_url:
-        client = AsyncClient()
+        client = socketio.AsyncClient()
         await client.connect(base_url, namespaces=["/ns"])
         try:
             sent_packets.clear()

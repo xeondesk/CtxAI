@@ -3,22 +3,18 @@ import contextlib
 import socket
 import sys
 import threading
-from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncIterator
 from unittest.mock import AsyncMock
 
 import pytest
-from socketio.asgi import ASGIApp
-from socketio.async_client import AsyncClient
-from socketio.async_server import AsyncServer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from ctxai.utils.state_monitor import StateMonitor
-from ctxai.utils.websocket_manager import WebSocketManager
+from helpers.state_monitor import StateMonitor
+from helpers.websocket_manager import WebSocketManager
 
 
 class FakeSocketIOServer:
@@ -110,10 +106,11 @@ async def test_namespace_isolation_state_sync_vs_dev_websocket_test() -> None:
     """
 
     from flask import Flask
+    import socketio
 
-    from cli.ui import configure_websocket_namespaces
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import WebSocketManager
+    from run_ui import configure_websocket_namespaces
 
     class StateHandler(WebSocketHandler):
         @classmethod
@@ -155,7 +152,7 @@ async def test_namespace_isolation_state_sync_vs_dev_websocket_test() -> None:
     webapp = Flask("test_namespace_isolation")
     webapp.secret_key = "test-secret"
 
-    sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", namespaces="*")
     lock = threading.RLock()
     manager = WebSocketManager(sio, lock)
 
@@ -169,10 +166,10 @@ async def test_namespace_isolation_state_sync_vs_dev_websocket_test() -> None:
         },
     )
 
-    asgi_app = ASGIApp(sio)
+    asgi_app = socketio.ASGIApp(sio)
 
     async with _run_asgi_app(asgi_app) as base_url:
-        client = AsyncClient()
+        client = socketio.AsyncClient()
 
         state_push_state = asyncio.Event()
         state_push_dev = asyncio.Event()
@@ -203,9 +200,7 @@ async def test_namespace_isolation_state_sync_vs_dev_websocket_test() -> None:
             wait_timeout=2,
         )
         try:
-            await client.call(
-                "state_request", {"context": None}, namespace="/state_sync", timeout=2
-            )
+            await client.call("state_request", {"context": None}, namespace="/state_sync", timeout=2)
             await asyncio.wait_for(state_push_state.wait(), timeout=2)
             await asyncio.sleep(0.05)
             assert state_push_dev.is_set() is False
@@ -225,8 +220,8 @@ async def test_diagnostics_include_source_namespace_and_deliver_on_dev_namespace
     but must include `sourceNamespace` identifying the origin namespace.
     """
 
-    from ctxai.utils.websocket import WebSocketHandler
-    from ctxai.utils.websocket_manager import DIAGNOSTIC_EVENT, WebSocketManager
+    from helpers.websocket import WebSocketHandler
+    from helpers.websocket_manager import DIAGNOSTIC_EVENT, WebSocketManager
 
     class DummyHandler(WebSocketHandler):
         @classmethod
@@ -272,7 +267,7 @@ def test_namespace_discovery_maps_core_handlers_to_expected_namespaces() -> None
     (no cross-registration).
     """
 
-    from ctxai.utils.websocket_namespace_discovery import discover_websocket_namespaces
+    from helpers.websocket_namespace_discovery import discover_websocket_namespaces
 
     discoveries = discover_websocket_namespaces(
         handlers_folder="python/websocket_handlers",
@@ -291,7 +286,7 @@ def test_namespace_discovery_maps_core_handlers_to_expected_namespaces() -> None
 
 
 def test_run_ui_builds_namespace_handler_map_without_cross_registration() -> None:
-    from cli.ui import _build_websocket_handlers_by_namespace
+    from run_ui import _build_websocket_handlers_by_namespace
 
     handlers_by_namespace = _build_websocket_handlers_by_namespace(object(), threading.RLock())
 
@@ -309,14 +304,12 @@ def test_run_ui_builds_namespace_handler_map_without_cross_registration() -> Non
 
 
 @pytest.mark.asyncio
-async def test_route_event_dispatches_only_within_connected_namespace_and_results_are_scoped() -> (
-    None
-):
+async def test_route_event_dispatches_only_within_connected_namespace_and_results_are_scoped() -> None:
     """
     CONTRACT.NS.ROUTING: inbound routing is restricted to handlers in the connected namespace.
     """
 
-    from ctxai.utils.websocket import WebSocketHandler
+    from helpers.websocket import WebSocketHandler
 
     socketio = FakeSocketIOServer()
     manager = WebSocketManager(socketio, threading.RLock())
@@ -372,7 +365,7 @@ async def test_lifecycle_broadcasts_deliver_only_within_the_namespace() -> None:
     CONTRACT.NS.DELIVERY: lifecycle broadcasts are namespace-scoped.
     """
 
-    from ctxai.utils.websocket_manager import (
+    from helpers.websocket_manager import (
         LIFECYCLE_CONNECT_EVENT,
         LIFECYCLE_DISCONNECT_EVENT,
     )
@@ -424,14 +417,12 @@ async def test_lifecycle_broadcasts_deliver_only_within_the_namespace() -> None:
 
 
 @pytest.mark.asyncio
-async def test_request_semantics_no_handlers_and_timeouts_are_namespace_scoped_and_order_insensitive() -> (
-    None
-):
+async def test_request_semantics_no_handlers_and_timeouts_are_namespace_scoped_and_order_insensitive() -> None:
     """
     CONTRACT.REQUEST.RESULTS + CONTRACT.REQUEST.RESULTS.ORDERING + CONTRACT.NS.ROUTING.
     """
 
-    from ctxai.utils.websocket import WebSocketHandler
+    from helpers.websocket import WebSocketHandler
 
     socketio = FakeSocketIOServer()
     manager = WebSocketManager(socketio, threading.RLock())

@@ -18,7 +18,7 @@
             <!-- Keep in mind that <template> can have only one root element inside -->
             <div id="tunnel-settings-section">
                 <div class="section-title">Flare Tunnel</div>
-                <div class="section-description">Create a secure public URL to access your Ctx AI instance anytime,
+                <div class="section-description">Create a secure public URL to access your Agent Zero instance anytime,
                     anywhere.</div>
                 <!-- Tunnel content UI -->
                 <div class="tunnel-container">
@@ -52,8 +52,7 @@
                                 <span class="step-number">1</span>
                                 <span class="step-text">Open the authentication page:</span>
                             </div>
-                            <a class="microsoft-login-link" :href="$store.tunnelStore.microsoftLoginUrl"
-                                target="_blank">
+                            <a class="microsoft-login-link" :href="$store.tunnelStore.microsoftLoginUrl" target="_blank">
                                 <span class="icon material-symbols-outlined">open_in_new</span>
                                 <span x-text="$store.tunnelStore.microsoftLoginUrl"></span>
                             </a>
@@ -64,10 +63,8 @@
                         </div>
                         <div class="microsoft-login-code-container">
                             <div class="microsoft-login-code" x-text="$store.tunnelStore.microsoftLoginCode"></div>
-                            <button class="btn btn-copy-code" @click="$store.tunnelStore.copyLoginCode()"
-                                :class="$store.tunnelStore.codeCopied ? 'copied' : ''">
-                                <span class="icon material-symbols-outlined"
-                                    x-text="$store.tunnelStore.codeCopied ? 'check' : 'content_copy'"></span>
+                            <button class="btn btn-copy-code" @click="$store.tunnelStore.copyLoginCode()" :class="$store.tunnelStore.codeCopied ? 'copied' : ''">
+                                <span class="icon material-symbols-outlined" x-text="$store.tunnelStore.codeCopied ? 'check' : 'content_copy'"></span>
                                 <span x-text="$store.tunnelStore.codeCopied ? 'Copied!' : 'Copy Code'"></span>
                             </button>
                         </div>
@@ -102,7 +99,7 @@
                                 <div class="tunnel-qr-label">Scan with mobile device</div>
                             </div>
                             <div class="tunnel-link-info">
-                                Share this URL to allow others to access your Ctx AI instance.
+                                Share this URL to allow others to access your Agent Zero instance.
                             </div>
                             <div class="tunnel-link-persistence">
                                 This URL will persist until you stop the tunnel or restart the Docker container.
@@ -568,13 +565,8 @@
         }
 
         @keyframes spin-slow {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .spin-slow {

@@ -2,11 +2,10 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-CLI_DIR = PROJECT_ROOT / "cli"
-if str(CLI_DIR) not in sys.path:
-    sys.path.insert(0, str(CLI_DIR))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-import ui as run_ui
+import run_ui
 
 
 def test_socketio_engine_configuration_defaults():
