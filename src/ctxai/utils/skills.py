@@ -54,7 +54,9 @@ def get_skill_roots(
         project_agents = files.find_existing_paths_by_pattern(
             "usr/projects/*/.ctxproj/agents/*/skills"
         )  # agents in projects
-        projects = files.find_existing_paths_by_pattern("usr/projects/*/.ctxproj/skills")  # projects
+        projects = files.find_existing_paths_by_pattern(
+            "usr/projects/*/.ctxproj/skills"
+        )  # projects
         usr_agents = files.find_existing_paths_by_pattern("usr/agents/*/skills")  # agents
         agents = files.find_existing_paths_by_pattern("agents/*/skills")  # agents
         plugins = files.find_existing_paths_by_pattern("plugins/*/skills")  # plugins

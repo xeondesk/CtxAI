@@ -21,9 +21,7 @@ class ImportKnowledge(ApiHandler):
         context = self.use_context(ctxid)
 
         file_list = request.files.getlist("files[]")
-        KNOWLEDGE_FOLDER = files.get_abs_path(
-            get_custom_knowledge_subdir_abs(context.ctx), "main"
-        )
+        KNOWLEDGE_FOLDER = files.get_abs_path(get_custom_knowledge_subdir_abs(context.ctx), "main")
 
         # Ensure knowledge folder exists (create if missing)
         try:
